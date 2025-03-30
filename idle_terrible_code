@@ -1,43 +1,52 @@
 import telebot
 import time
-from telebot import types
+from telebot import types #Для создания кнопок
 
 bot = telebot.TeleBot('Ваш токен')
 
+# Пример статуса заказа
 def get_order_status():
+    #Фейковый API статуса заказа
+    # Статусы могут обновляться: "В обработке", "Отправлено", "Доставлено"
     status_list = ['В обработке', 'Отправлено', 'Доставлено']
     return status_list[int(time.time()) % 3]  
 
+# Функция для создания кнопок (markup)
 def create_order_buttons():
     markup = types.InlineKeyboardMarkup()
     btn_check = types.InlineKeyboardButton('Проверить снова', callback_data='check_order')
     markup.add(btn_check)
     return markup
 
+# Команда для показа статуса заказа
 @bot.message_handler(commands=['start'])
 def send_order_status(message):
     status = get_order_status()
     markup = create_order_buttons()
     sent_msg = bot.send_message(message.chat.id, f"Статус вашего заказа: {status}", reply_markup=markup)
 
+# Обработка нажатия на кнопку
 @bot.callback_query_handler(func=lambda call: call.data == 'check_order')
 def callback_check_order(call):
     status = get_order_status()
 
+    # Обновляем только клавиатуру
     new_markup = types.InlineKeyboardMarkup()
     btn_checked = types.InlineKeyboardButton('Проверено!', callback_data='checked')
     new_markup.add(btn_checked)
 
+    # Обновляем текст статуса и кнопки
     bot.edit_message_text(
         text=f"Текущий статус вашего заказа: {status}",
         chat_id=call.message.chat.id,
         message_id=call.message.message_id
     )
 
+    # Меняем клавиатуру с кнопкой "Проверено!"
     bot.edit_message_reply_markup(
         chat_id=call.message.chat.id,
         message_id=call.message.message_id,
-        reply_markup=new_markup
+        reply_markup=new_markup # Обновленная клавиатура
     )
 
 
